@@ -150,12 +150,19 @@
   };
   let rafId = 0;
   let timers = [];
-  let scrolledToWish = false;
 
   const altWish = () => (state.wish === 'fast' ? state.compareWish : state.wish);
   const altRoute = () => (altWish() ? ROUTES[WISHES[altWish()].route] : null);
   const isMatch = () => state.wish === 'fast';
   const scrollOpts = () => ({ behavior: reduceMQ.matches ? 'auto' : 'smooth', block: 'start' });
+
+  // Переход к следующей сцене; фокус идёт вместе с ней, чтобы Tab не возвращал наверх.
+  function goTo(sceneSel, focusSel) {
+    revealScene($(sceneSel));
+    $(sceneSel).scrollIntoView(scrollOpts());
+    const f = focusSel && $(focusSel);
+    if (f) f.focus({ preventScroll: true });
+  }
 
   /* =========================================================
      SVG-хелперы
@@ -542,7 +549,7 @@
     if (state.build !== 'built') return;
     state.accepted = state.considered ? state.active : 'fast';
     renderAll();
-    later(60, state.token).then((ok) => ok && $('#final').scrollIntoView(scrollOpts()));
+    later(60, state.token).then((ok) => ok && goTo('#final', '#t-final'));
   }
 
   /* =========================================================
@@ -584,8 +591,10 @@
     }
     wc.querySelectorAll('.choice').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === state.wish)));
 
+    // место под фразу появляется вместе с вариантами, сама фраза — после выбора
     const pw = $('#phraseWrap');
-    pw.hidden = !state.wish;
+    pw.hidden = !task;
+    pw.classList.toggle('is-pending', !state.wish);
     if (state.wish) $('#phrase').textContent = `«${WISHES[state.wish].phrase}»`;
   }
 
@@ -774,7 +783,7 @@
       const note = document.createElement('p');
       note.className = 'note fade-in';
       note.textContent = `Ты выбрал: ${r.title.toLowerCase()} · ${minText(r.min)}.`;
-      box.append(note, button('Посмотреть итог', () => $('#final').scrollIntoView(scrollOpts())));
+      box.append(note, button('Посмотреть итог', () => goTo('#final', '#t-final')));
       if (state.considered) box.append(button('Выбрать другой вариант', () => setActive(state.active === 'fast' ? 'alt' : 'fast')));
       else if (isMatch()) box.append(button('Сравнить с другим приоритетом', () => { state.accepted = null; state.compareOpen = true; renderAll(); }));
       else box.append(button('Учесть моё желание', considerWish));
@@ -894,18 +903,14 @@
      ========================================================= */
 
   function selectTask(id) {
-    if (state.task === id) return;
-    state.task = id;
-    state.wish = null;
-    resetRoute();
-    renderAll();
-    if (!scrolledToWish) {
-      scrolledToWish = true;
-      later(80, state.token).then(() => {
-        const rect = $('#wishChoices').getBoundingClientRect();
-        if (rect.bottom > innerHeight) $('#wish').scrollIntoView(scrollOpts());
-      });
+    if (state.task !== id) {
+      state.task = id;
+      state.wish = null;
+      resetRoute();
+      renderAll();
     }
+    // следующий шаг — выбор желания; короткая пауза, чтобы был виден выбор
+    later(320, state.token).then((ok) => ok && goTo('#wish', '#wishChoices .choice'));
   }
 
   function selectWish(id) {
@@ -928,15 +933,11 @@
     $(`#seg .seg-btn[data-route="${next}"]`).focus();
   });
   $('#againBtn').addEventListener('click', () => {
-    if (state.task) {
-      state.wish = null;
-      resetRoute();
-      renderAll();
-      $('#wish').scrollIntoView(scrollOpts());
-      later(reduceMQ.matches ? 0 : 500, state.token).then(() => $('#wishChoices .choice')?.focus({ preventScroll: true }));
-    } else {
-      $('#task').scrollIntoView(scrollOpts());
-    }
+    if (!state.task) return goTo('#task', '#taskChoices .choice');
+    state.wish = null;
+    resetRoute();
+    renderAll();
+    goTo('#wish', '#wishChoices .choice');
   });
 
   // Карта: десктопный и мобильный кадр
@@ -945,13 +946,31 @@
   }
   mobileMQ.addEventListener('change', () => { applyViewBox(); renderOverlays(); });
 
-  // Мягкое появление типографики
+  // Сцена проявляется, только когда поднимется выше 60% высоты экрана:
+  // следующий блок не виден без заметной прокрутки или перехода по кнопке.
   const io = 'IntersectionObserver' in window
-    ? new IntersectionObserver((entries) => entries.forEach((en) => {
-        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-      }), { rootMargin: '0px 0px -8% 0px' })
+    ? new IntersectionObserver((entries) => entries.forEach((en) => en.isIntersecting && reveal(en.target)),
+        { rootMargin: '0px 0px -40% 0px' })
     : null;
-  document.querySelectorAll('[data-reveal]').forEach((n) => (io ? io.observe(n) : n.classList.add('in')));
+  function reveal(n) {
+    n.classList.add('in');
+    if (io) io.unobserve(n);
+  }
+  function revealScene(scene) {
+    const n = scene && scene.querySelector('[data-reveal]');
+    if (n) reveal(n);
+  }
+  document.querySelectorAll('[data-reveal]').forEach((n) => (io ? io.observe(n) : reveal(n)));
+  // переход по ссылке-шагу («Попробовать», «К карте»…) показывает сцену сразу
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (a && a.getAttribute('href').length > 1) revealScene(document.querySelector(a.getAttribute('href')));
+  });
+  // фокус с клавиатуры сразу показывает сцену, в которую он попал
+  document.addEventListener('focusin', (e) => {
+    const n = e.target.closest && e.target.closest('[data-reveal]:not(.in)');
+    if (n) reveal(n);
+  });
 
   applyViewBox();
   drawBase();

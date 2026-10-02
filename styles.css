@@ -42,14 +42,21 @@ p { margin: 0; }
 
 /* ---------- Scenes ---------- */
 
+/* Каждая сцена — не меньше экрана: следующий блок начинается за его краем. */
 .scene {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
   max-width: 1100px;
   margin: 0 auto;
   padding: clamp(80px, 13vh, 150px) 24px;
   text-align: center;
 }
-.scene-tight { padding-top: clamp(40px, 7vh, 80px); }
-.scene-map { padding-top: clamp(64px, 10vh, 120px); padding-bottom: clamp(64px, 10vh, 120px); }
+.scene-body { width: 100%; }
+/* Карта не центрируется, чтобы смена состояний не сдвигала её; снизу — отступ до итога. */
+.scene-map { justify-content: flex-start; margin-top: 20vh; padding-top: clamp(64px, 10vh, 120px); padding-bottom: clamp(140px, 24vh, 260px); }
 
 .display {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
@@ -70,8 +77,7 @@ p { margin: 0; }
   text-wrap: pretty;
 }
 
-.hero { min-height: min(92vh, 860px); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.hero-mark { width: 180px; height: auto; margin-bottom: 36px; overflow: visible; }
+.hero-mark { display: block; width: 180px; height: auto; margin: 0 auto 36px; overflow: visible; }
 .hero-path { fill: none; stroke: var(--blue); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 0.1 9; }
 .hero-dot { fill: var(--blue); stroke: #fff; stroke-width: 2; }
 .hero-dot-halo { fill: rgba(0, 122, 255, 0.16); }
@@ -169,8 +175,15 @@ p { margin: 0; }
 
 .muted-note { color: var(--soft); margin-top: 28px; font-size: 17px; }
 
+/* Место под фразу занято заранее: после выбора желания сцена не прыгает. */
 .phrase-wrap { margin-top: 48px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.phrase-wrap.is-pending { visibility: hidden; }
+.phrase-wrap:not(.is-pending) { animation: fadeUp 0.45s var(--ease) both; }
 .phrase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.75em;
   font-size: clamp(1.35rem, 1rem + 1.3vw, 2.1rem);
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -361,8 +374,13 @@ p { margin: 0; }
 
 /* ---------- Reveal ---------- */
 
+/* Сцена проявляется, когда поднимается выше ~60% высоты экрана (см. app.js). */
 .js [data-reveal] { opacity: 0; transform: translateY(14px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.js [data-reveal]:not(.in) { pointer-events: none; }
 .js [data-reveal].in { opacity: 1; transform: none; }
+
+/* Заголовок итога получает фокус программно — без кольца. */
+[tabindex="-1"]:focus { box-shadow: none; }
 
 /* ---------- SVG map ---------- */
 
@@ -407,10 +425,8 @@ p { margin: 0; }
 @media (max-width: 720px) {
   body { font-size: 17px; }
   .scene { padding: 64px 16px; }
-  .scene-tight { padding-top: 24px; }
-  .scene-map { padding-top: 56px; padding-bottom: 56px; }
+  .scene-map { padding-top: 56px; padding-bottom: max(140px, 22vh); }
   .display { font-size: clamp(1.75rem, 1.2rem + 2.6vw, 2.25rem); }
-  .hero { min-height: 88vh; }
   .choices { grid-template-columns: 1fr; gap: 10px; margin-top: 30px; }
   .choice { min-height: 62px; font-size: 17px; }
   .intent { position: relative; top: 0; font-size: 15px; padding: 8px 16px; border-radius: 20px; }
@@ -457,8 +473,8 @@ p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .fade-in, .hl-in { animation: none; }
+  .js [data-reveal] { transform: none; transition: none; }
+  .fade-in, .hl-in, .phrase-wrap:not(.is-pending) { animation: none; }
   .hl.miss.first .hl-pulse { animation: none; }
   .route-card, .btn, .choice, .seg-btn, .route .r-main, .route .r-case { transition: none; }
 }
