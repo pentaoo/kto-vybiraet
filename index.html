@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кто выбирает, когда выбираю я?</title>
+<meta name="description" content="Интерактивная история о том, как интерфейс карты распределяет инициативу между человеком и системой.">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<main>
+  <!-- Сцена 1. Приглашение -->
+  <section class="scene hero" id="intro" aria-labelledby="t-intro">
+    <svg class="hero-mark" viewBox="0 0 220 60" aria-hidden="true">
+      <path class="hero-path" d="M20 42 C 70 42, 70 18, 110 18 S 160 38, 196 26" />
+      <circle cx="20" cy="42" r="9" class="hero-dot-halo"/>
+      <circle cx="20" cy="42" r="5.5" class="hero-dot"/>
+      <path class="hero-pin" d="M196 30 c-6 -7 -9 -11 -9 -15 a9 9 0 0 1 18 0 c0 4 -3 8 -9 15z"/>
+      <circle cx="196" cy="15" r="3.2" fill="#fff"/>
+    </svg>
+    <h1 class="display" id="t-intro" data-reveal>Кто выбирает, когда выбираю я?</h1>
+    <p class="lead" data-reveal>У тебя есть свободный вечер и место встречи. Попробуем выбрать дорогу — и посмотрим, что интерфейс услышит в твоём желании.</p>
+    <div class="hero-actions" data-reveal>
+      <a class="btn btn-primary btn-lg" href="#task">Попробовать</a>
+      <a class="link" href="#final">Сразу к объяснению</a>
+    </div>
+  </section>
+
+  <!-- Сцена 2. Выбор задачи -->
+  <section class="scene" id="task" aria-labelledby="t-task">
+    <h2 class="display" id="t-task" data-reveal>Что хочется сделать?</h2>
+    <div class="choices" id="taskChoices" role="group" aria-labelledby="t-task" data-reveal></div>
+  </section>
+
+  <!-- Сцена 3. Выбор желания -->
+  <section class="scene scene-tight" id="wish" aria-labelledby="t-wish">
+    <h2 class="display" id="t-wish" data-reveal>Что важно по дороге?</h2>
+    <p class="muted-note" id="wishEmpty">Сначала выбери, <a href="#task">что хочется сделать</a>.</p>
+    <div class="choices" id="wishChoices" role="group" aria-labelledby="t-wish"></div>
+    <div class="phrase-wrap" id="phraseWrap" hidden>
+      <p class="phrase" id="phrase" aria-live="polite"></p>
+      <a class="btn btn-tint" href="#map">К карте</a>
+    </div>
+  </section>
+
+  <!-- Сцены 4–6. Карта, вмешательство, сравнение -->
+  <section class="scene scene-map" id="map" aria-labelledby="mapTitle">
+    <h2 class="display" id="mapTitle">Что предложит карта?</h2>
+
+    <div class="intent" id="intent">
+      <span class="intent-label">Твоё желание</span>
+      <span class="intent-text" id="intentText">ещё не выбрано — <a href="#wish">выбрать</a></span>
+    </div>
+
+    <div class="map-app" id="mapApp">
+      <div class="panel" id="panel">
+        <div class="od" aria-label="Отсюда в Место встречи">
+          <span class="od-dot" aria-hidden="true"></span><span>Отсюда</span>
+          <span class="od-arrow" aria-hidden="true">→</span>
+          <span class="od-pin" aria-hidden="true"></span><span>Место встречи</span>
+        </div>
+        <button class="btn btn-primary btn-sm" id="buildBtn" type="button" disabled>Построить маршрут</button>
+      </div>
+
+      <svg id="mapSvg" class="map-svg" viewBox="-20 -70 1120 760" role="img" aria-labelledby="mapDesc">
+        <desc id="mapDesc">Условная карта района: начало пути, место встречи, Большой проспект, Тихая улица, сквер, кафе, книжный, Дом с часами, Рыночная площадь и лестница на холме.</desc>
+      </svg>
+
+      <div class="route-card is-empty" id="routeCard">
+        <p class="rc-empty">Маршрут ещё не построен</p>
+        <div class="rc-body">
+          <p class="rc-title" id="rcTitle"></p>
+          <p class="rc-meta" id="rcMeta"></p>
+        </div>
+        <div class="seg" id="seg" role="radiogroup" aria-label="Сравнение маршрутов">
+          <button type="button" role="radio" class="seg-btn" data-route="fast" aria-checked="false">Быстрее</button>
+          <button type="button" role="radio" class="seg-btn" data-route="alt" aria-checked="false">По моему замыслу</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="explain" id="explain" aria-live="polite"></p>
+    <p class="question" id="question"></p>
+    <div class="actions" id="actions"></div>
+  </section>
+
+  <!-- Финал -->
+  <section class="scene scene-final" id="final" aria-labelledby="t-final">
+    <h2 class="display" id="t-final" data-reveal>Кто выбирал?</h2>
+    <div id="storyBox" aria-live="polite"></div>
+
+    <dl class="triad" id="triad" data-reveal></dl>
+
+    <p class="closing" data-reveal>Интерфейс может быть удобным, пока твоё желание помещается в предусмотренную им задачу. Но что происходит, когда хочется чего-то другого?</p>
+    <div data-reveal>
+      <button class="btn btn-primary btn-lg" id="againBtn" type="button">Попробовать другое желание</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">«Кто выбирает, когда выбираю я?» · История 1 — маршрут. Карта, названия и время условные.</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
