@@ -516,8 +516,10 @@
     if (!(await later(120, token))) return;
     state.build = 'built';
     state.pulse = true;
+    const hadFocus = document.activeElement === $('#buildBtn'); // кнопка сейчас скроется
     renderAll();
     state.pulse = false;
+    if (hadFocus) focusFirstAction();
   }
 
   async function considerWish() {
@@ -605,12 +607,14 @@
     else t.innerHTML = 'ещё не выбрано — <a href="#task">выбрать</a>';
   }
 
-  function renderPanel() {
+  // Кнопка под картой видна, пока маршрут не построен; потом на её месте пояснение.
+  function renderBuild() {
     const b = $('#buildBtn');
-    if (!state.wish) { b.disabled = true; b.textContent = 'Сначала выбери желание'; }
-    else if (state.build === 'idle') { b.disabled = false; b.textContent = 'Построить маршрут'; }
-    else if (state.build === 'building') { b.disabled = true; b.textContent = 'Строим…'; }
-    else { b.disabled = true; b.textContent = 'Маршрут построен'; }
+    $('#buildCta').classList.toggle('is-hidden', state.build !== 'idle' && state.build !== 'building');
+    // во время постройки кнопку не отключаем, чтобы не терять фокус; повторное нажатие ничего не делает
+    b.disabled = !state.wish;
+    b.setAttribute('aria-disabled', String(state.build === 'building'));
+    b.textContent = !state.wish ? 'Сначала выбери желание' : state.build === 'building' ? 'Строим…' : 'Построить маршрут';
   }
 
   function renderTitle() {
@@ -732,11 +736,9 @@
   function renderExplain() {
     const ex = $('#explain');
     const q = $('#question');
-    let s = '', hint = false, question = '';
+    let s = '', question = '';
     const fast = ROUTES.fast;
-    if (!state.wish) { s = 'Выбери желание выше — и построй маршрут.'; hint = true; }
-    else if (state.build === 'idle') { s = 'Нажми «Построить маршрут» на карте.'; hint = true; }
-    else if (state.build === 'built') {
+    if (state.wish && state.build === 'built') {
       const w = WISHES[state.wish];
       if (!state.considered) s = w.first;
       else {
@@ -757,9 +759,8 @@
     if (ex.textContent !== s) {
       ex.textContent = s;
       ex.classList.remove('fade-in');
-      if (s && !hint) { void ex.offsetWidth; ex.classList.add('fade-in'); }
+      if (s) { void ex.offsetWidth; ex.classList.add('fade-in'); }
     }
-    ex.classList.toggle('is-hint', hint);
     q.textContent = question;
   }
 
@@ -888,7 +889,7 @@
   function renderAll() {
     renderChoices();
     renderIntent();
-    renderPanel();
+    renderBuild();
     renderTitle();
     renderCard();
     renderOverlays();

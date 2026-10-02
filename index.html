@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Кто выбирает, когда выбираю я?</title>
 <meta name="description" content="Интерактивная история о том, как интерфейс карты распределяет инициативу между человеком и системой.">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=8">
 <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -68,7 +68,6 @@
             <span class="od-arrow" aria-hidden="true">→</span>
             <span class="od-pin" aria-hidden="true"></span><span>Место встречи</span>
           </div>
-          <button class="btn btn-primary btn-sm" id="buildBtn" type="button" disabled>Построить маршрут</button>
         </div>
 
         <svg id="mapSvg" class="map-svg" viewBox="-20 -70 1120 760" role="img" aria-labelledby="mapDesc">
@@ -88,7 +87,13 @@
         </div>
       </div>
 
-      <p class="explain" id="explain" aria-live="polite"></p>
+      <!-- Под картой одно место: сначала кнопка постройки, потом пояснение -->
+      <div class="below-map">
+        <p class="explain" id="explain" aria-live="polite"></p>
+        <div class="build-cta" id="buildCta">
+          <button class="btn btn-primary btn-lg" id="buildBtn" type="button" disabled>Построить маршрут</button>
+        </div>
+      </div>
       <p class="question" id="question"></p>
       <div class="actions" id="actions"></div>
     </div>
@@ -112,6 +117,6 @@
 
 <footer class="foot">«Кто выбирает, когда выбираю я?» · История 1 — маршрут. Карта, названия и время условные.</footer>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
